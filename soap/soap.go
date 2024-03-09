@@ -30,9 +30,8 @@ type SOAPEnvelopeResponse struct {
 }
 
 type SOAPEnvelope struct {
-	XMLName xml.Name      `xml:"soap:Envelope"`
-	XmlNS   string        `xml:"xmlns:soap,attr"`
-	Headers []interface{} `xml:"soap:Header"`
+	XMLName xml.Name      `xml:"http://schemas.xmlsoap.org/soap/envelope/ Envelope"`
+	Headers []interface{} `xml:"Header"`
 	Body    SOAPBody
 }
 
@@ -409,9 +408,7 @@ func (s *Client) CallWithFaultDetail(soapAction string, request, response interf
 func (s *Client) call(ctx context.Context, soapAction string, request, response interface{}, faultDetail FaultError,
 	retAttachments *[]MIMEMultipartAttachment) error {
 	// SOAP envelope capable of namespace prefixes
-	envelope := SOAPEnvelope{
-		XmlNS: XmlNsSoapEnv,
-	}
+	envelope := SOAPEnvelope{}
 
 	envelope.Headers = s.headers
 
@@ -436,7 +433,12 @@ func (s *Client) call(ctx context.Context, soapAction string, request, response 
 		return err
 	}
 
-	req, err := http.NewRequest("POST", s.url, buffer)
+	fixedBytes, err := FixNamespace(buffer.Bytes())
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest("POST", s.url, bytes.NewReader(fixedBytes))
 	if err != nil {
 		return err
 	}
