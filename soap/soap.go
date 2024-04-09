@@ -433,12 +433,7 @@ func (s *Client) call(ctx context.Context, soapAction string, request, response 
 		return err
 	}
 
-	fixedBytes, err := FixNamespace(buffer.Bytes())
-	if err != nil {
-		return err
-	}
-
-	req, err := http.NewRequest("POST", s.url, bytes.NewReader(fixedBytes))
+	req, err := http.NewRequest("POST", s.url, buffer)
 	if err != nil {
 		return err
 	}
